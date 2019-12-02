@@ -11,6 +11,12 @@ function isHidden(element: HTMLElement) {
   if (process.env.NODE_ENV === 'test') {
     return false;
   }
+  /**
+   * 笔记
+   *  https://www.runoob.com/jsref/dom-obj-all.html
+   * 
+   *  https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLElement/offsetParent
+   */
   return !element || element.offsetParent === null;
 }
 
@@ -48,7 +54,7 @@ export default class Wave extends React.Component<{ insertExtraNode?: boolean }>
     if (!node || node.nodeType !== 1) {
       return;
     }
-    this.instance = this.bindAnimationEvent(node);
+    this.instance = this.bindAnimationEvent(node); // 如果是元素节点，要做一件事，并且把这个元素传给这个要做事的函数
   }
 
   componentWillUnmount() {
@@ -128,6 +134,10 @@ export default class Wave extends React.Component<{ insertExtraNode?: boolean }>
     return insertExtraNode ? 'ant-click-animating' : 'ant-click-animating-without-extra-node';
   }
 
+  /**
+   * 这个函数干的事情就是，给传进来的 dom 元素绑定 onclick 事件
+   * 然后返回一个对象，该对象包含了能取消这个事情监听器的东西
+   */
   bindAnimationEvent = (node: HTMLElement) => {
     if (
       !node ||
@@ -135,10 +145,14 @@ export default class Wave extends React.Component<{ insertExtraNode?: boolean }>
       node.getAttribute('disabled') ||
       node.className.indexOf('disabled') >= 0
     ) {
-      return;
+      return; // DOM 的 nodeType ，getAttribute 我都不熟呀
     }
     const onClick = (e: MouseEvent) => {
       // Fix radio button click twice
+      /**
+       * 笔记 https://developer.mozilla.org/zh-CN/docs/Web/API/Event/target
+       */
+      console.log('e.target ', e.target);
       if ((e.target as HTMLElement).tagName === 'INPUT' || isHidden(e.target as HTMLElement)) {
         return;
       }
@@ -158,6 +172,10 @@ export default class Wave extends React.Component<{ insertExtraNode?: boolean }>
         this.animationStart = false;
       }, 10);
     };
+    /**
+     * addEventListener 和 removeEventListener 我也不太清楚，之前都是 document.addEventListener
+     *  https://www.runoob.com/jsref/met-element-addeventlistener.html
+     */
     node.addEventListener('click', onClick, true);
     return {
       cancel: () => {

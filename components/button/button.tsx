@@ -10,16 +10,16 @@ import { ConfigConsumer, ConfigConsumerProps } from '../config-provider';
 import Wave from '../_util/wave';
 import { Omit, tuple } from '../_util/type';
 
-const rxTwoCNChar = /^[\u4e00-\u9fa5]{2}$/;
-const isTwoCNChar = rxTwoCNChar.test.bind(rxTwoCNChar);
+const rxTwoCNChar = /^[\u4e00-\u9fa5]{2}$/; // 1. \u4e00 和 \u9fa5 是unicode编码，并且正好是中文编码的开始和结束的两个值
+const isTwoCNChar = rxTwoCNChar.test.bind(rxTwoCNChar); // 2. 为什么不直接调用正则的 test 方法，还要 bind 一下？
 function isString(str: any) {
   return typeof str === 'string';
 }
 
 // Insert one space between two chinese characters automatically.
-function insertSpace(child: React.ReactChild, needInserted: boolean) {
+function insertSpace(child: React.ReactChild, needInserted: boolean) { // 3. 为什么这里用 ReactChild 来形容 child 而不是用 ReactElement ?
   // Check the child if is undefined or null.
-  if (child == null) {
+  if (child == null) { // 4. 这个偶早就知道了
     return;
   }
   const SPACE = needInserted ? ' ' : '';
@@ -27,9 +27,11 @@ function insertSpace(child: React.ReactChild, needInserted: boolean) {
   if (
     typeof child !== 'string' &&
     typeof child !== 'number' &&
-    isString(child.type) &&
-    isTwoCNChar(child.props.children)
+    isString(child.type) && // 5. 只有 ReactElement 才有 type 属性，所以能进到这里 child 是 ReactElement
+    isTwoCNChar(child.props.children) // child 还有 props 属性，进一步验证 child 是 ReactElement
   ) {
+    // 6. 都能使用 React.cloneElement 方法了，child 是 ReactElement 没跑了
+    // cloneElement 方法使用详解 https://www.jianshu.com/p/2ccf0cd14388
     return React.cloneElement(child, {}, child.props.children.split('').join(SPACE));
   }
   if (typeof child === 'string') {
@@ -38,12 +40,15 @@ function insertSpace(child: React.ReactChild, needInserted: boolean) {
     }
     return <span>{child}</span>;
   }
+  // 7. 能走到这里说明 child 是 number 类型 ？
   return child;
 }
 
-function spaceChildren(children: React.ReactNode, needInserted: boolean) {
+function spaceChildren(children: React.ReactNode, needInserted: boolean) { // 8. ReactNode 那一串 或 是什么东西。。。
   let isPrevChildPure: boolean = false;
   const childList: React.ReactNode[] = [];
+  // 9. 又遇到了一个新的 React.Children 上的方法
+  // 对 React children 的深入理解 https://www.jianshu.com/p/d1975493b5ea/
   React.Children.forEach(children, child => {
     const type = typeof child;
     const isCurrentChildPure = type === 'string' || type === 'number';
